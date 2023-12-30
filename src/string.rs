@@ -91,13 +91,7 @@ impl String {
 	pub fn truncate(&self, new_len: usize) -> Self {
 		if self.len() > new_len {
 			assert!(self.as_str().is_char_boundary(new_len));
-
-			let layout = Layout::array::<u8>(new_len).unwrap();
-			let new_ptr = unsafe { alloc(layout) };
-			unsafe { new_ptr.copy_from_nonoverlapping(self.raw.as_ptr(), new_len) };
-
-			let s = unsafe { &*ptr::slice_from_raw_parts_mut(new_ptr, new_len) };
-			let raw = unsafe { pool::from_slice(s) };
+			let raw = unsafe { pool::from_slice(&self.raw[..new_len]) };
 			Self { raw }
 		} else {
 			self.clone()
