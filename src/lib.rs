@@ -9,3 +9,4 @@ mod pool;
 mod string;
 
 pub use string::String;
+pub use pool::{ gc, stats, Stats };
