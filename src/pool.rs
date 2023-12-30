@@ -5,24 +5,9 @@ pub(crate) use inner::RawString;
 
 fn get_existing(bytes: &[u8]) -> Result<RawString, inner::MutexLock> {
 	let mut lock = inner::get_pool().lock();
-	// lock.get(&ByteWrap(bytes)).map(Arc::clone)
 	match lock.get(&ByteWrap(bytes)) {
 		Some(s) => { Ok(Arc::clone(s)) }
 		None => { Err(lock) }
-	}
-}
-
-pub(crate) unsafe fn from_boxed_slice(s: Box<[u8]>) -> RawString {
-	// could have been from_slice, but wanted to reuse the allocation if possible
-	// is this worth it? probably not
-	match get_existing(&s) {
-		Ok(s) => { s }
-		Err(mut lock) => {
-			// SAFETY: get_existing checked the value doesn't exist in the set
-			let val = lock.insert_unique_unchecked(Arc::new(s));
-
-			Arc::clone(val)
-		}
 	}
 }
 
@@ -42,11 +27,6 @@ pub(crate) unsafe fn from_slice(slice: &[u8]) -> RawString {
 pub(crate) fn from_str(s: &str) -> RawString {
 	// SAFETY: a str is guaranteed to be valid utf8
 	unsafe { from_slice(s.as_bytes()) }
-}
-
-#[inline(always)]
-pub(crate) unsafe fn from_vec(vec: Vec<u8>) -> RawString {
-	from_boxed_slice(vec.into_boxed_slice())
 }
 
 #[repr(transparent)]

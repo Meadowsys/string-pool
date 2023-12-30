@@ -20,18 +20,7 @@ impl String {
 		Self { arc: pool::from_str("") }
 	}
 
-	#[inline]
-	pub fn from_utf8(vec: Vec<u8>) -> Result<Self, std_str::Utf8Error> {
-		match std_str::from_utf8(&vec) {
-			Ok(_) => {
-				let arc = unsafe { pool::from_vec(vec) };
-				Ok(Self { arc })
-			}
-			Err(e) => { Err(e) }
-		}
-	}
-
-	pub fn from_utf8_slice(s: &[u8]) -> Result<Self, std_str::Utf8Error> {
+	pub fn from_utf8(s: &[u8]) -> Result<Self, std_str::Utf8Error> {
 		match std_str::from_utf8(s) {
 			Ok(_) => {
 				let arc = unsafe { pool::from_slice(s) };
@@ -41,12 +30,12 @@ impl String {
 		}
 	}
 
-	pub fn from_utf8_lossy(v: &[u8]) -> Self {
-		let arc = match StdString::from_utf8_lossy(v) {
+	pub fn from_utf8_lossy(s: &[u8]) -> Self {
+		let arc = match StdString::from_utf8_lossy(s) {
 			Cow::Borrowed(s) => { pool::from_str(s) }
 			Cow::Owned(s) => {
 				// SAFETY: std String is guaranteed to be valid utf8
-				unsafe { pool::from_vec(s.into_bytes()) }
+				unsafe { pool::from_slice(s.as_bytes()) }
 			}
 		};
 
@@ -69,8 +58,8 @@ impl String {
 	}
 
 	#[inline]
-	pub unsafe fn from_utf8_unchecked(bytes: Vec<u8>) -> String {
-		let arc = pool::from_vec(bytes);
+	pub unsafe fn from_utf8_unchecked(bytes: &[u8]) -> String {
+		let arc = pool::from_slice(bytes);
 		Self { arc }
 	}
 
@@ -105,8 +94,8 @@ impl String {
 			let new_ptr = unsafe { alloc(layout) };
 			unsafe { new_ptr.copy_from_nonoverlapping(self.arc.as_ptr(), new_len) };
 
-			let s = unsafe { Box::from_raw(ptr::slice_from_raw_parts_mut(new_ptr, new_len)) };
-			let arc = unsafe { pool::from_boxed_slice(s) };
+			let s = unsafe { &*ptr::slice_from_raw_parts_mut(new_ptr, new_len) };
+			let arc = unsafe { pool::from_slice(s) };
 			Self { arc }
 		} else {
 			self.clone()
