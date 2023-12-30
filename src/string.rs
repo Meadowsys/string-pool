@@ -12,7 +12,7 @@ use std::string::{ self as std_string, String as StdString };
 use std::sync::Arc;
 
 pub struct String {
-	arc: RawString
+	raw: RawString
 }
 
 impl String {
@@ -24,47 +24,47 @@ impl String {
 	#[inline]
 	#[allow(clippy::should_implement_trait)]
 	pub fn from_str(s: &str) -> Self {
-		Self { arc: pool::from_str(s) }
+		Self { raw: pool::from_str(s) }
 	}
 
 	pub fn from_utf8(s: &[u8]) -> Result<Self, std_str::Utf8Error> {
 		match std_str::from_utf8(s) {
 			Ok(_) => {
-				let arc = unsafe { pool::from_slice(s) };
-				Ok(Self { arc })
+				let raw = unsafe { pool::from_slice(s) };
+				Ok(Self { raw })
 			}
 			Err(e) => { Err(e) }
 		}
 	}
 
 	pub fn from_utf8_lossy(s: &[u8]) -> Self {
-		let arc = match StdString::from_utf8_lossy(s) {
+		let raw = match StdString::from_utf8_lossy(s) {
 			Cow::Borrowed(s) => { pool::from_str(s) }
 			Cow::Owned(s) => { pool::from_str(&s) }
 		};
 
-		Self { arc }
+		Self { raw }
 	}
 
 	pub fn from_utf16(v: &[u16]) -> Result<String, std_string::FromUtf16Error> {
 		match StdString::from_utf16(v) {
 			Ok(s) => {
-				let arc = pool::from_str(&s);
-				Ok(Self { arc })
+				let raw = pool::from_str(&s);
+				Ok(Self { raw })
 			}
 			Err(e) => { Err(e) }
 		}
 	}
 
 	pub fn from_utf16_lossy(v: &[u16]) -> String {
-		let arc = pool::from_str(&StdString::from_utf16_lossy(v));
-		Self { arc }
+		let raw = pool::from_str(&StdString::from_utf16_lossy(v));
+		Self { raw }
 	}
 
 	#[inline]
 	pub unsafe fn from_utf8_unchecked(bytes: &[u8]) -> String {
-		let arc = pool::from_slice(bytes);
-		Self { arc }
+		let raw = pool::from_slice(bytes);
+		Self { raw }
 	}
 
 	#[inline]
@@ -74,17 +74,17 @@ impl String {
 
 	#[inline]
 	pub fn as_bytes(&self) -> &[u8] {
-		&self.arc
+		&self.raw
 	}
 
 	#[inline]
 	pub fn len(&self) -> usize {
-		self.arc.len()
+		self.raw.len()
 	}
 
 	#[inline]
 	pub fn is_empty(&self) -> bool {
-		self.arc.is_empty()
+		self.raw.is_empty()
 	}
 
 	#[must_use]
@@ -94,11 +94,11 @@ impl String {
 
 			let layout = Layout::array::<u8>(new_len).unwrap();
 			let new_ptr = unsafe { alloc(layout) };
-			unsafe { new_ptr.copy_from_nonoverlapping(self.arc.as_ptr(), new_len) };
+			unsafe { new_ptr.copy_from_nonoverlapping(self.raw.as_ptr(), new_len) };
 
 			let s = unsafe { &*ptr::slice_from_raw_parts_mut(new_ptr, new_len) };
-			let arc = unsafe { pool::from_slice(s) };
-			Self { arc }
+			let raw = unsafe { pool::from_slice(s) };
+			Self { raw }
 		} else {
 			self.clone()
 		}
@@ -111,11 +111,11 @@ impl String {
 
 		let layout = Layout::array::<u8>(new_len).unwrap();
 		let new_ptr = unsafe { alloc(layout) };
-		unsafe { new_ptr.copy_from_nonoverlapping(self.arc.as_ptr(), new_len) };
+		unsafe { new_ptr.copy_from_nonoverlapping(self.raw.as_ptr(), new_len) };
 
 		let s = unsafe { &*ptr::slice_from_raw_parts_mut(new_ptr, new_len) };
-		let arc = unsafe { pool::from_slice(s) };
-		Some((ch, Self { arc }))
+		let raw = unsafe { pool::from_slice(s) };
+		Some((ch, Self { raw }))
 	}
 
 	#[must_use]
@@ -129,13 +129,13 @@ impl String {
 		let layout = Layout::array::<u8>(new_len).unwrap();
 		let new_ptr = unsafe { alloc(layout) };
 		unsafe {
-			new_ptr.copy_from_nonoverlapping(self.arc.as_ptr(), i);
-			new_ptr.copy_from_nonoverlapping(self.arc.as_ptr().add(next), new_len - i);
+			new_ptr.copy_from_nonoverlapping(self.raw.as_ptr(), i);
+			new_ptr.copy_from_nonoverlapping(self.raw.as_ptr().add(next), new_len - i);
 		}
 
 		let s = unsafe { &*ptr::slice_from_raw_parts(new_ptr, new_len) };
-		let arc = unsafe { pool::from_slice(s) };
-		(ch, Self { arc })
+		let raw = unsafe { pool::from_slice(s) };
+		(ch, Self { raw })
 	}
 }
 
@@ -144,7 +144,7 @@ impl Deref for String {
 	#[inline]
 	fn deref(&self) -> &str {
 		// SAFETY: strings in string pool guaranteed to be valid utf8
-		unsafe { std_str::from_utf8_unchecked(&self.arc) }
+		unsafe { std_str::from_utf8_unchecked(&self.raw) }
 	}
 }
 
@@ -220,7 +220,7 @@ impl From<StdString> for String {
 impl Clone for String {
 	#[inline]
 	fn clone(&self) -> Self {
-		Self { arc: Arc::clone(&self.arc) }
+		Self { raw: Arc::clone(&self.raw) }
 	}
 }
 
