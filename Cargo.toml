@@ -1,0 +1,13 @@
+[package]
+name = "string-pool"
+version = "0.0.0"
+description = "Global immutable string pool, like Java"
+edition = "2021"
+authors = ["Meadowsys"]
+repository = "https://github.com/Meadowsys/string-pool.git"
+license = "MIT"
+include = ["src"]
+
+[dependencies]
+hashbrown = "0.14.3"
+parking_lot = "0.12.1"
