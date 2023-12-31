@@ -3,19 +3,13 @@ use std::sync::Arc;
 
 pub(crate) use inner::RawString;
 
-fn get_existing(bytes: &[u8]) -> Result<RawString, inner::MutexLock> {
-	let mut lock = inner::get_pool().lock();
-	match lock.get(&ByteWrap(bytes)) {
-		Some(s) => { Ok(Arc::clone(s)) }
-		None => { Err(lock) }
-	}
-}
-
 pub(crate) unsafe fn from_slice(slice: &[u8]) -> RawString {
-	match get_existing(slice) {
-		Ok(s) => { s }
-		Err(mut lock) => {
-			// SAFETY: get_existing checked the value doesn't exist in the set
+	let mut lock = inner::get_pool().lock();
+
+	match lock.get(&ByteWrap(slice)) {
+		Some(s) => { Arc::clone(s) }
+		None => {
+			// SAFETY: we just checked, it doesn't exist
 			let val = lock.insert_unique_unchecked(Arc::new(slice.to_vec().into_boxed_slice()));
 
 			Arc::clone(val)
