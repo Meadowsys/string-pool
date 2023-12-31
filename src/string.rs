@@ -103,12 +103,7 @@ impl String {
 		let ch = self.chars().next_back()?;
 		let new_len = self.len() - ch.len_utf8();
 
-		let layout = Layout::array::<u8>(new_len).unwrap();
-		let new_ptr = unsafe { alloc(layout) };
-		unsafe { new_ptr.copy_from_nonoverlapping(self.raw.as_ptr(), new_len) };
-
-		let s = unsafe { &*ptr::slice_from_raw_parts_mut(new_ptr, new_len) };
-		let raw = unsafe { pool::from_slice(s) };
+		let raw = unsafe { pool::from_slice(&self.raw[..new_len]) };
 		Some((ch, Self { raw }))
 	}
 
