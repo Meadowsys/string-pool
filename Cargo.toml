@@ -11,3 +11,4 @@ include = ["src"]
 [dependencies]
 hashbrown = "0.14.3"
 parking_lot = "0.12.1"
+lazy-wrap = "0.4.1"

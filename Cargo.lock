@@ -49,6 +49,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "lazy-wrap"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b05fcf3ec66d34a5e65a6e14d5648ac4d5c16d5a9abc11536dc666809c1539e2"
+dependencies = [
+ "parking_lot",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.151"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -137,6 +146,7 @@ name = "string-pool"
 version = "0.1.0"
 dependencies = [
  "hashbrown",
+ "lazy-wrap",
  "parking_lot",
 ]
 
