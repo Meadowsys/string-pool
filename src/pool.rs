@@ -6,7 +6,7 @@ use ::std::sync::Arc;
 pub(crate) type RawString = Arc<Box<[u8]>>;
 type Pool = Mutex<HashSet<RawString>>;
 
-static POOL: LazyWrap<Pool> = LazyWrap::new(Default::default);
+static POOL: LazyWrap<Pool> = LazyWrap::new(Pool::default);
 
 #[repr(transparent)]
 #[derive(Hash)]
