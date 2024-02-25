@@ -5,8 +5,8 @@
 	clippy::new_without_default
 )]
 
-mod pool;
-mod string;
+pub mod pool;
+pub mod string;
 
 pub use string::String;
 // pub use pool::{ gc, stats, Stats };
