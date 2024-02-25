@@ -13,6 +13,10 @@ pub trait PoolAccess {
 	type RawString;
 
 	/// Provides a [`RawString`][`PoolAccess::RawString`] from a slice
+	///
+	/// # Safety
+	///
+	/// Caller must ensure that the slice provided contains valid UTF-8
 	unsafe fn from_slice(slice: &[u8]) -> Self::RawString;
 
 	/// Takes a [`RawString`][`PoolAccess::RawString`] and derefs it to `&[u8]`
@@ -25,19 +29,22 @@ pub trait PoolAccess {
 
 	/// Instructs the pool to preallocate capacity, for optimisation reasons only.
 	/// There is no provided guarantee of such, and should not be expected to
-	/// do anything after the pool is already initialised.
+	/// do anything after first access of the pool, usually when the first
+	/// [`String`][`super::String`] is created.
 	/// Default impl is a noop
 	#[inline]
 	fn preallocate_capacity(capacity: usize) {}
 
 	/// Provides a [`RawString`][`PoolAccess::RawString`] from a `&str`.
-	/// Default impl is usually enough
+	/// Default impl just calls [`from_slice`][`PoolAccess::from_slice`] with
+	/// `str.as_bytes()`
 	#[inline]
 	fn from_str(s: &str) -> Self::RawString {
 		unsafe { Self::from_slice(s.as_bytes()) }
 	}
 }
 
+/// The default string pool.
 pub struct DefaultPool;
 
 // all accesses to this static in this module use SeqCst, which
@@ -53,11 +60,6 @@ static POOL: LazyWrap<RwLock<HashSet<<DefaultPool as PoolAccess>::RawString>>> =
 
 impl PoolAccess for DefaultPool {
 	type RawString = Arc<Box<[u8]>>;
-
-	#[inline]
-	fn deref_raw_to_slice(raw: &Self::RawString) -> &[u8] {
-		raw
-	}
 
 	unsafe fn from_slice(slice: &[u8]) -> Self::RawString {
 		let slice = &ByteWrap(slice);
@@ -79,6 +81,11 @@ impl PoolAccess for DefaultPool {
 			drop(pool);
 			raw
 		}
+	}
+
+	#[inline]
+	fn deref_raw_to_slice(raw: &Self::RawString) -> &[u8] {
+		raw
 	}
 
 	fn dropping_instance_of(slice: &[u8]) {
