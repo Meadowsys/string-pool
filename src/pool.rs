@@ -6,7 +6,7 @@ use ::std::marker::PhantomData;
 use ::std::ops::Deref;
 use ::std::sync::atomic::{ AtomicUsize, Ordering::SeqCst };
 
-pub trait PoolAccess {
+pub trait PoolProvider {
 	/// Raw type of string that this pool manages. Ideally provided instances
 	/// of these should point  to the same memory backing store, which is the
 	/// whole point of the pool (one global instance per string).
@@ -59,12 +59,12 @@ pub struct DefaultPool;
 // of programs, so the slower ordering isn't that big of a deal
 static CAPACITY: AtomicUsize = AtomicUsize::new(0);
 
-static POOL: LazyWrap<RwLock<HashSet<<DefaultPool as PoolAccess>::RawString>>> = LazyWrap::new(|| {
+static POOL: LazyWrap<RwLock<HashSet<<DefaultPool as PoolProvider>::RawString>>> = LazyWrap::new(|| {
 	let hashset = HashSet::with_capacity(CAPACITY.load(SeqCst));
 	RwLock::new(hashset)
 });
 
-impl PoolAccess for DefaultPool {
+impl PoolProvider for DefaultPool {
 	type RawString = Arc<Box<[u8]>>;
 
 	unsafe fn from_slice(slice: &[u8]) -> Self::RawString {

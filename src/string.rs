@@ -1,10 +1,10 @@
-use crate::pool::{ DefaultPool, PoolAccess };
+use crate::pool::{ DefaultPool, PoolProvider };
 use ::std::{ str as std_str, string as std_string };
 use ::std::string::String as StdString;
 use ::std::ops::Deref;
 
 #[must_use = "String pool instances are immutable; operations that would mutate std String, actually return a new instance here"]
-pub struct String<P: PoolAccess = DefaultPool> {
+pub struct String<P: PoolProvider = DefaultPool> {
 	raw: P::RawString
 }
 
@@ -13,7 +13,7 @@ pub struct String<P: PoolAccess = DefaultPool> {
 /// specified, which  is weird to me???
 pub type StringDefaultPool = String;
 
-impl<P: PoolAccess> String<P> {
+impl<P: PoolProvider> String<P> {
 	#[inline]
 	pub fn empty() -> Self {
 		Self::from_str("")
@@ -118,7 +118,7 @@ impl<P: PoolAccess> String<P> {
 	// TODO unstable stuff: remove_matches
 }
 
-impl<P: PoolAccess> Deref for String<P> {
+impl<P: PoolProvider> Deref for String<P> {
 	type Target = str;
 	#[inline]
 	fn deref(&self) -> &str {
