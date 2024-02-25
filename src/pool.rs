@@ -23,9 +23,15 @@ pub trait PoolAccess {
 	/// This is more flexible than requiring `RawString: Deref<[u8]>`
 	fn deref_raw_to_slice(raw: &Self::RawString) -> &[u8];
 
+	/// Clones the raw string provided. This should just be
+	/// making a copy of the reference.
+	fn clone_raw(raw: &Self::RawString) -> Self::RawString;
+
 	/// Called when an instance of [`RawString`][`PoolAccess::RawString`]
 	/// is being dropped. This gives the pool opportunity to clean up if needed
 	fn dropping_instance_of(slice: &[u8]);
+
+	// --- optional methods ---
 
 	/// Instructs the pool to preallocate capacity, for optimisation reasons only.
 	/// There is no provided guarantee of such, and should not be expected to
@@ -86,6 +92,11 @@ impl PoolAccess for DefaultPool {
 	#[inline]
 	fn deref_raw_to_slice(raw: &Self::RawString) -> &[u8] {
 		raw
+	}
+
+	#[inline]
+	fn clone_raw(raw: &Self::RawString) -> Self::RawString {
+		Arc::clone(raw)
 	}
 
 	fn dropping_instance_of(slice: &[u8]) {
