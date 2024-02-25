@@ -66,6 +66,10 @@ impl<P: PoolAccess> String<P> {
 		P::deref_raw_to_slice(&self.raw)
 	}
 
+	pub fn to_std(&self) -> StdString {
+		StdString::from(&**self)
+	}
+
 	#[inline]
 	pub fn push_str(&self, s: &str) -> Self {
 		// maybe theres a more efficient way to do this?
@@ -104,6 +108,14 @@ impl<P: PoolAccess> String<P> {
 		let new_len = self.len() - c.len_utf8();
 		Some((c, Self::from_str(&self[..new_len])))
 	}
+
+	pub fn remove(&self, i: usize) -> (char, Self) {
+		let mut std_string = self.to_std();
+		let c = std_string.remove(i);
+		(c, Self::from_str(&std_string))
+	}
+
+	// TODO unstable stuff: remove_matches
 }
 
 impl<P: PoolAccess> Deref for String<P> {
