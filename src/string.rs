@@ -1,4 +1,4 @@
-use crate::pool::{ DefaultPool, PoolProvider };
+use crate::pool::{ PoolProvider, default::DefaultPool };
 use ::std::{ str as std_str, string as std_string };
 use ::std::string::String as StdString;
 use ::std::ops::Deref;
@@ -7,11 +7,6 @@ use ::std::ops::Deref;
 pub struct String<P: PoolProvider = DefaultPool> {
 	raw: P::RawString
 }
-
-/// call associated functions on this when using the default pool, because for
-/// some reason, doing something like `String::empty()` requires `P` to be
-/// specified, which  is weird to me???
-pub type StringDefaultPool = String;
 
 impl<P: PoolProvider> String<P> {
 	#[inline]
