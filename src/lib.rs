@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 // TODO: remove when more finished
 #![allow(dead_code, unused_imports, unused_variables)]
 #![allow(clippy::missing_safety_doc)]
@@ -7,5 +9,5 @@
 pub mod pool;
 mod string;
 
-pub use self::string::String;
-pub use self::pool::Pool;
+pub use crate::string::String;
+pub use crate::pool::Pool;
