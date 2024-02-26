@@ -1,4 +1,4 @@
-use crate::pool::{ GlobalPool, Pool, PoolMutStr };
+use crate::pool::{ GlobalPool, Pool };
 use ::std::string::{ self as std_string, String as StdString };
 use ::std::str as std_str;
 
@@ -122,13 +122,6 @@ impl<P: Pool> String<P> {
 	pub fn as_str(&self) -> &str {
 		let slice = self.pool.raw_to_slice(&self.raw);
 		unsafe { std_str::from_utf8_unchecked(slice) }
-	}
-}
-
-impl<P: Pool + PoolMutStr> String<P> {
-	pub fn as_mut_str(&mut self) -> &mut str {
-		let slice = self.pool.raw_to_mut_slice(&mut self.raw);
-		unsafe { std_str::from_utf8_unchecked_mut(slice) }
 	}
 }
 
