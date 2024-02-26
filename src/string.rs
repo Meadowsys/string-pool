@@ -37,6 +37,24 @@ impl String {
 	pub fn from_utf16_lossy(v: &[u16]) -> Self {
 		Self::from_utf16_lossy_in(v, GlobalPool)
 	}
+
+	// skipping nightly apis for now:
+	//    from_utf16le
+	//    from_utf16le_lossy
+	//    from_utf16be
+	//    from_utf16be_lossy
+	//    into_raw_parts
+
+	// skipping apis for now:
+	//    from_raw_parts
+
+	pub unsafe fn from_utf8_unchecked(bytes: Vec<u8>) -> Self {
+		Self::from_utf8_unchecked_in(bytes, GlobalPool)
+	}
+
+	pub unsafe fn from_utf8_unchecked_slice(slice: &[u8]) -> Self {
+		Self::from_utf8_unchecked_slice_in(slice, GlobalPool)
+	}
 }
 
 // constructors with custom pool
@@ -82,6 +100,15 @@ impl<P: Pool> String<P> {
 	pub fn from_utf16_lossy_in(v: &[u16], pool: P) -> Self {
 		let s = StdString::from_utf16_lossy(v);
 		let raw = pool.raw_from_str(&s);
+		Self { raw, pool }
+	}
+
+	pub unsafe fn from_utf8_unchecked_in(bytes: Vec<u8>, pool: P) -> Self {
+		Self::from_utf8_unchecked_slice_in(&bytes, pool)
+	}
+
+	pub unsafe fn from_utf8_unchecked_slice_in(slice: &[u8], pool: P) -> Self {
+		let raw = pool.raw_from_slice(slice);
 		Self { raw, pool }
 	}
 }
