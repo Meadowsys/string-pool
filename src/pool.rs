@@ -30,21 +30,20 @@ pub trait Pool {
 	}
 
 	/// note to implementors: The default implementation
-	/// of this function is usually enough; however this can be overridden
-	/// for efficiency reasons.
+	/// of this function is usually enough
 	fn raw_from_str(&self, s: &str) -> Self::Raw {
 		unsafe { self.raw_from_slice(s.as_bytes()) }
 	}
 
 	/// note to implementors: The default implementation
 	/// of this function is usually enough; however this can be overridden
-	/// for efficiency reasons.
+	/// if you can provide an optimisation.
 	fn raw_empty(&self) -> Self::Raw {
 		self.raw_from_str("")
 	}
 
 	/// note to implementors: You probably don't want this (you'll know if you do).
-	/// This can be overridden if you can provide an optimisation by doing so.
+	/// This can be overridden if you can provide an optimisation.
 	fn raw_empty_with_capacity(&self, capacity: usize) -> Self::Raw {
 		let _ = capacity;
 		self.raw_empty()
