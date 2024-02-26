@@ -17,15 +17,26 @@ pub trait Pool {
 	// --- provided functions ---
 
 	/// note to implementors: The default implementation
-	/// of this method is usually enough.
+	/// of this function is usually enough.
 	unsafe fn raw_from_slice(&self, slice: &[u8]) -> Self::Raw {
 		self.raw_from_slices(SlicesWrap(&[slice]))
 	}
 
 	/// note to implementors: The default implementation
-	/// of this method is usually enough.
+	/// of this function is usually enough.
 	fn raw_from_str(&self, s: &str) -> Self::Raw {
 		unsafe { self.raw_from_slice(s.as_bytes()) }
+	}
+
+	/// note to implementors: The default implementation
+	/// of this function is usually enough.
+	fn raw_empty(&self) -> Self::Raw {
+		self.raw_from_str("")
+	}
+
+	/// note to implementors: You probably don't want this (you'll know if you do)
+	fn raw_empty_with_capacity(&self, capacity: usize) -> Self::Raw {
+		self.raw_empty()
 	}
 }
 
