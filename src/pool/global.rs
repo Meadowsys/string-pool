@@ -5,14 +5,14 @@ use ::parking_lot::RwLock;
 use ::std::hash::{ Hash, Hasher };
 use ::std::sync::Arc;
 
-pub struct Global;
+pub struct GlobalPool;
 
-static POOL: LazyWrap<RwLock<HashSet<<Global as Pool>::Raw>>> = LazyWrap::new(|| {
+static POOL: LazyWrap<RwLock<HashSet<<GlobalPool as Pool>::Raw>>> = LazyWrap::new(|| {
 	let set = HashSet::new();
 	RwLock::new(set)
 });
 
-impl Pool for Global {
+impl Pool for GlobalPool {
 	type Raw = Arc<SliceHashWrap>;
 
 	unsafe fn raw_from_slices(&self, slices: SlicesWrap) -> Self::Raw {
@@ -57,8 +57,8 @@ impl PartialEq for SliceHashWrap {
 
 impl Eq for SliceHashWrap {}
 
-impl<'h> Equivalent<<Global as Pool>::Raw> for SlicesWrap<'h> {
-	fn equivalent(&self, key: &<Global as Pool>::Raw) -> bool {
+impl<'h> Equivalent<<GlobalPool as Pool>::Raw> for SlicesWrap<'h> {
+	fn equivalent(&self, key: &<GlobalPool as Pool>::Raw) -> bool {
 		let mut iter1 = key.0.iter().copied();
 		let mut iter2 = self.into_iter();
 

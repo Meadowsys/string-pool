@@ -3,7 +3,7 @@ use ::hashbrown::HashSet;
 
 mod global;
 
-pub use global::Global;
+pub use global::GlobalPool;
 
 pub trait Pool {
 	type Raw;
