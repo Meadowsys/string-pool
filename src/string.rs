@@ -25,6 +25,10 @@ impl String {
 	pub fn from_utf8_slice(slice: &[u8]) -> Result<Self, std_str::Utf8Error> {
 		Self::from_utf8_slice_in(slice, GlobalPool)
 	}
+
+	pub fn from_utf8_lossy(v: &[u8]) -> Self {
+		Self::from_utf8_lossy_in(v, GlobalPool)
+	}
 }
 
 // constructors with custom pool
@@ -53,5 +57,23 @@ impl<P: Pool> String<P> {
 		let s = std_str::from_utf8(slice)?;
 		let raw = pool.raw_from_str(s);
 		Ok(Self { raw, pool })
+	}
+
+	pub fn from_utf8_lossy_in(v: &[u8], pool: P) -> Self {
+		let s = StdString::from_utf8_lossy(v);
+		Self::from((&*s, pool))
+	}
+}
+
+impl From<&str> for String {
+	fn from(s: &str) -> Self {
+		Self::from((s, GlobalPool))
+	}
+}
+
+impl<P: Pool> From<(&str, P)> for String<P> {
+	fn from((s, pool): (&str, P)) -> Self {
+		let raw = pool.raw_from_str(s);
+		Self { raw, pool }
 	}
 }
