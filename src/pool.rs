@@ -58,6 +58,13 @@ pub trait Pool: Clone {
 	fn raw_into_vec(&self, raw: Self::Raw) -> Vec<u8> {
 		self.raw_to_slice(&raw).to_vec()
 	}
+
+	/// note to implementors: The default implementation
+	/// of this function is usually enough; however this can be overridden
+	/// for optimisation reasons.
+	fn raw_into_boxed_slice(&self, raw: Self::Raw) -> Box<[u8]> {
+		self.raw_into_vec(raw).into_boxed_slice()
+	}
 }
 
 /// Wraps a slice of slices of bytes. This has a simple hash implementation

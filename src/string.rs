@@ -279,6 +279,16 @@ impl<P: Pool> String<P> {
 
 	// skipping (for now): drain
 	// skipping (for now): replace_range
+
+	pub fn into_boxed_str(self) -> Box<str> {
+		let boxed = self.pool.raw_into_boxed_slice(self.raw);
+		unsafe { std_str::from_boxed_utf8_unchecked(boxed) }
+	}
+
+	pub fn leak<'h>(self) -> &'h mut str {
+		let slice = self.pool.raw_into_vec(self.raw).leak();
+		unsafe { std_str::from_utf8_unchecked_mut(slice) }
+	}
 }
 
 impl From<&str> for String {
