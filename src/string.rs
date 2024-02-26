@@ -1,4 +1,4 @@
-use crate::pool::{ GlobalPool, Pool };
+use crate::pool::{ GlobalPool, Pool, SlicesWrap };
 use ::std::string::{ self as std_string, String as StdString };
 use ::std::str as std_str;
 
@@ -122,6 +122,17 @@ impl<P: Pool> String<P> {
 	pub fn as_str(&self) -> &str {
 		let slice = self.pool.raw_to_slice(&self.raw);
 		unsafe { std_str::from_utf8_unchecked(slice) }
+	}
+
+	pub fn push_str(&mut self, string: &str) {
+		let new_raw = unsafe {
+			self.pool.raw_from_slices(SlicesWrap(&[
+				self.pool.raw_to_slice(&self.raw),
+				string.as_bytes()
+			]))
+		};
+
+		self.raw = new_raw;
 	}
 }
 
