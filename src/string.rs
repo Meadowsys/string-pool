@@ -114,6 +114,13 @@ impl<P: Pool> String<P> {
 	}
 }
 
+// functions that take self
+impl<P: Pool> String<P> {
+	pub fn into_bytes(self) -> Vec<u8> {
+		self.pool.raw_into_vec(self.raw)
+	}
+}
+
 impl From<&str> for String {
 	fn from(s: &str) -> Self {
 		Self::from((s, GlobalPool))

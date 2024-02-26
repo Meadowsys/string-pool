@@ -18,6 +18,8 @@ pub trait Pool {
 	/// even though it is quite likely that they will be.
 	unsafe fn raw_from_slices(&self, slices: SlicesWrap) -> Self::Raw;
 
+	fn raw_to_slice<'r>(&self, raw: &'r Self::Raw) -> &'r [u8];
+
 	// --- can-be-optimised functions ---
 	// these can be overridden if it can create a more efficient implementation
 
@@ -55,6 +57,20 @@ pub trait Pool {
 	fn raw_empty_with_capacity(&self, capacity: usize) -> Self::Raw {
 		let _ = capacity;
 		self.raw_empty()
+	}
+
+	/// note to implementors: The default implementation
+	/// of this function is usually enough; however this can be overridden
+	/// for optimisation reasons.
+	fn raw_into_vec(&self, raw: Self::Raw) -> Vec<u8> {
+		self.raw_to_slice(&raw).to_vec()
+	}
+
+	/// note to implementors: The default implementation
+	/// of this function is usually enough; however this can be overridden
+	/// for optimisation reasons.
+	fn raw_into_boxed_slice(&self, raw: Self::Raw) -> Box<[u8]> {
+		self.raw_into_vec(raw).into_boxed_slice()
 	}
 
 	// --- provided functions ---

@@ -37,6 +37,10 @@ impl Pool for GlobalPool {
 			raw
 		}
 	}
+
+	fn raw_to_slice<'r>(&self, raw: &'r Self::Raw) -> &'r [u8] {
+		&raw.0
+	}
 }
 
 /// Wrapper for `Box<[u8]>` that hashes the slice within by repeatedly
