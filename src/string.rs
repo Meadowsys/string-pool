@@ -29,6 +29,14 @@ impl String {
 	pub fn from_utf8_lossy(v: &[u8]) -> Self {
 		Self::from_utf8_lossy_in(v, GlobalPool)
 	}
+
+	pub fn from_utf16(v: &[u16]) -> Result<Self, std_string::FromUtf16Error> {
+		Self::from_utf16_in(v, GlobalPool)
+	}
+
+	pub fn from_utf16_lossy(v: &[u16]) -> Self {
+		Self::from_utf16_lossy_in(v, GlobalPool)
+	}
 }
 
 // constructors with custom pool
@@ -61,7 +69,20 @@ impl<P: Pool> String<P> {
 
 	pub fn from_utf8_lossy_in(v: &[u8], pool: P) -> Self {
 		let s = StdString::from_utf8_lossy(v);
-		Self::from((&*s, pool))
+		let raw = pool.raw_from_str(&s);
+		Self { raw, pool }
+	}
+
+	pub fn from_utf16_in(v: &[u16], pool: P) -> Result<Self, std_string::FromUtf16Error> {
+		let s = StdString::from_utf16(v)?;
+		let raw = pool.raw_from_str(&s);
+		Ok(Self { raw, pool })
+	}
+
+	pub fn from_utf16_lossy_in(v: &[u16], pool: P) -> Self {
+		let s = StdString::from_utf16_lossy(v);
+		let raw = pool.raw_from_str(&s);
+		Self { raw, pool }
 	}
 }
 
