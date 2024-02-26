@@ -100,6 +100,18 @@ impl<P: Pool> String<P> {
 		let raw = pool.raw_from_slice(slice);
 		Self { raw, pool }
 	}
+
+	pub fn to_other_pool<P2: Pool>(&self, pool: P2) -> String<P2> {
+		let slice = self.pool.raw_to_slice(&self.raw);
+		let raw = unsafe { pool.raw_from_slice(slice) };
+		String { raw, pool }
+	}
+
+	pub fn into_other_pool<P2: Pool>(self, pool: P2) -> String<P2> {
+		let vec = self.pool.raw_into_vec(self.raw);
+		let raw = unsafe { pool.raw_from_vec(vec) };
+		String { raw, pool }
+	}
 }
 
 // functions that take self
@@ -225,6 +237,44 @@ impl<P: Pool> String<P> {
 		let new_raw = unsafe { self.pool.raw_from_slices(SlicesWrap(&retained)) };
 		self.raw = new_raw;
 	}
+
+	pub fn insert(&mut self, i: usize, ch: char) {
+		self.insert_str(i, ch.encode_utf8(&mut [0u8; 4]));
+	}
+
+	pub fn insert_str(&mut self, i: usize, string: &str) {
+		assert!(self.is_char_boundary(i));
+		let slice = self.as_bytes();
+
+		let new_raw = unsafe {
+			self.pool.raw_from_slices(SlicesWrap(&[
+				&slice[..i],
+				string.as_bytes(),
+				&slice[i..]
+			]))
+		};
+
+		self.raw = new_raw;
+	}
+
+	// skipping: as_mut_vec
+
+	pub fn split_off(&mut self, at: usize) -> Self {
+		self.split_off_in(at, self.pool.clone())
+	}
+
+	pub fn split_off_in<P2: Pool>(&mut self, at: usize, pool: P2) -> String<P2> {
+		assert!(self.is_char_boundary(at));
+
+		let self_raw = unsafe { self.pool.raw_from_slice(self[..at].as_bytes()) };
+		let other_raw = unsafe { pool.raw_from_slice(self[at..].as_bytes()) };
+
+		self.raw = self_raw;
+		String { raw: other_raw, pool }
+	}
+}
+
+impl<P: Pool> String<P> {
 }
 
 impl From<&str> for String {
