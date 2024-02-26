@@ -333,3 +333,44 @@ pub struct Drain<'h, P: Pool> {
 	end: usize,
 	chars: std_str::Chars<'h>
 }
+
+impl<P: Pool> Drop for Drain<'_, P> {
+	fn drop(&mut self) {
+		let string = unsafe { &mut *self.string };
+
+		let slice = string.as_bytes();
+		let start = &slice[..self.start];
+		let end = &slice[self.end..];
+
+		let new_raw = unsafe {
+			string.pool.raw_from_slices(SlicesWrap(&[
+				&slice[..self.start],
+				&slice[self.end..]
+			]))
+		};
+
+		string.raw = new_raw;
+	}
+}
+
+impl<P: Pool> Iterator for Drain<'_, P> {
+	type Item = char;
+
+	fn next(&mut self) -> Option<char> {
+		self.chars.next()
+	}
+
+	fn size_hint(&self) -> (usize, Option<usize>) {
+		self.chars.size_hint()
+	}
+
+	fn last(mut self) -> Option<char> {
+		self.chars.next_back()
+	}
+}
+
+impl<P: Pool> DoubleEndedIterator for Drain<'_, P> {
+	fn next_back(&mut self) -> Option<char> {
+		self.chars.next_back()
+	}
+}
