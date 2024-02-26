@@ -27,6 +27,7 @@ pub trait PoolProvider {
 	/// Called when an instance of [`RawString`][`PoolAccess::RawString`]
 	/// is being dropped. This gives the pool opportunity to clean up if needed.
 	/// Default impl is a noop
+	#[inline]
 	fn dropping_instance_of(slice: &[u8]) {
 		let _ = slice;
 	}
