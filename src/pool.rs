@@ -49,7 +49,7 @@ pub trait Pool {
 	/// of this function is usually enough; however this can be overridden
 	/// for optimisation reasons.
 	fn raw_empty(&self) -> Self::Raw {
-		self.raw_from_str("")
+		unsafe { self.raw_from_slice(&[]) }
 	}
 
 	/// note to implementors: You probably don't want this (you'll know if you do);
@@ -64,21 +64,6 @@ pub trait Pool {
 	/// for optimisation reasons.
 	fn raw_into_vec(&self, raw: Self::Raw) -> Vec<u8> {
 		self.raw_to_slice(&raw).to_vec()
-	}
-
-	/// note to implementors: The default implementation
-	/// of this function is usually enough; however this can be overridden
-	/// for optimisation reasons.
-	fn raw_into_boxed_slice(&self, raw: Self::Raw) -> Box<[u8]> {
-		self.raw_into_vec(raw).into_boxed_slice()
-	}
-
-	// --- provided functions ---
-
-	/// note to implementors: The default implementation
-	/// of this function is usually enough
-	fn raw_from_str(&self, s: &str) -> Self::Raw {
-		unsafe { self.raw_from_slice(s.as_bytes()) }
 	}
 }
 

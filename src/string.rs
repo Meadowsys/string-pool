@@ -59,7 +59,7 @@ impl String {
 // constructors with custom pool
 impl<P: Pool> String<P> {
 	pub fn new_in(pool: P) -> Self {
-		let raw = pool.raw_from_str("");
+		let raw = pool.raw_empty();
 		Self { raw, pool }
 	}
 
@@ -80,25 +80,25 @@ impl<P: Pool> String<P> {
 
 	pub fn from_utf8_slice_in(slice: &[u8], pool: P) -> Result<Self, std_str::Utf8Error> {
 		let s = std_str::from_utf8(slice)?;
-		let raw = pool.raw_from_str(s);
+		let raw = unsafe { pool.raw_from_slice(s.as_bytes()) };
 		Ok(Self { raw, pool })
 	}
 
 	pub fn from_utf8_lossy_in(v: &[u8], pool: P) -> Self {
 		let s = StdString::from_utf8_lossy(v);
-		let raw = pool.raw_from_str(&s);
+		let raw = unsafe { pool.raw_from_slice(s.as_bytes()) };
 		Self { raw, pool }
 	}
 
 	pub fn from_utf16_in(v: &[u16], pool: P) -> Result<Self, std_string::FromUtf16Error> {
 		let s = StdString::from_utf16(v)?;
-		let raw = pool.raw_from_str(&s);
+		let raw = unsafe { pool.raw_from_slice(s.as_bytes()) };
 		Ok(Self { raw, pool })
 	}
 
 	pub fn from_utf16_lossy_in(v: &[u16], pool: P) -> Self {
 		let s = StdString::from_utf16_lossy(v);
-		let raw = pool.raw_from_str(&s);
+		let raw = unsafe { pool.raw_from_slice(s.as_bytes()) };
 		Self { raw, pool }
 	}
 
@@ -133,7 +133,7 @@ impl From<&str> for String {
 
 impl<P: Pool> From<(&str, P)> for String<P> {
 	fn from((s, pool): (&str, P)) -> Self {
-		let raw = pool.raw_from_str(s);
+		let raw = unsafe { pool.raw_from_slice(s.as_bytes()) };
 		Self { raw, pool }
 	}
 }
