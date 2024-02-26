@@ -33,15 +33,12 @@ impl String {
 		Self::from_utf16_lossy_in(v, GlobalPool)
 	}
 
-	// skipping nightly apis for now:
-	//    from_utf16le
-	//    from_utf16le_lossy
-	//    from_utf16be
-	//    from_utf16be_lossy
-	//    into_raw_parts
-
-	// skipping apis for now:
-	//    from_raw_parts
+	// skipping (nightly, for now): from_utf16le
+	// skipping (nightly, for now): from_utf16le_lossy
+	// skipping (nightly, for now): from_utf16be
+	// skipping (nightly, for now): from_utf16be_lossy
+	// skipping (nightly): into_raw_parts
+	// skipping: from_raw_parts
 
 	pub unsafe fn from_utf8_unchecked(bytes: Vec<u8>) -> Self {
 		Self::from_utf8_unchecked_in(bytes, GlobalPool)
@@ -115,6 +112,8 @@ impl<P: Pool> String<P> {
 		unsafe { std_str::from_utf8_unchecked(slice) }
 	}
 
+	// skipping: as_mut_str
+
 	pub fn push_str(&mut self, string: &str) {
 		let new_raw = unsafe {
 			self.pool.raw_from_slices(SlicesWrap(&[
@@ -125,6 +124,9 @@ impl<P: Pool> String<P> {
 
 		self.raw = new_raw;
 	}
+
+	// skipping (nightly, for now): extend_from_within
+	// skipping: capacity
 }
 
 impl From<&str> for String {
