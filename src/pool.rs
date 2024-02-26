@@ -82,6 +82,10 @@ pub trait Pool {
 	}
 }
 
+pub trait PoolMutStr: Pool {
+	fn raw_to_mut_slice<'r>(&self, raw: &'r mut Self::Raw) -> &'r mut [u8];
+}
+
 /// Wraps a slice of slices of bytes. This has a simple hash implementation
 /// that's just done by repeatedly calling `hash` on every u8 in sequence, to
 /// purposefully ensure that by doing the same to just one slice, or any amount of slices,
