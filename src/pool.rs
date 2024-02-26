@@ -8,6 +8,8 @@ pub use global::GlobalPool;
 pub trait Pool {
 	type Raw;
 
+	// --- required functions ---
+
 	/// # Safety
 	///
 	/// The provided slices, when joined together using [`SlicesWrap::to_boxed_slice`],
@@ -16,11 +18,12 @@ pub trait Pool {
 	/// even though it is quite likely that they will be.
 	unsafe fn raw_from_slices(&self, slices: SlicesWrap) -> Self::Raw;
 
-	// --- provided functions ---
+	// --- can-be-optimised functions ---
+	// these can be overridden if it can create a more efficient implementation
 
 	/// note to implementors: The default implementation
 	/// of this function is usually enough; however this can be overridden
-	/// for efficiency reasons.
+	/// for optimisation reasons.
 	///
 	/// # Safety
 	///
@@ -30,14 +33,8 @@ pub trait Pool {
 	}
 
 	/// note to implementors: The default implementation
-	/// of this function is usually enough
-	fn raw_from_str(&self, s: &str) -> Self::Raw {
-		unsafe { self.raw_from_slice(s.as_bytes()) }
-	}
-
-	/// note to implementors: The default implementation
 	/// of this function is usually enough; however this can be overridden
-	/// for efficiency reasons.
+	/// for optimisation reasons.
 	///
 	/// # Safety
 	///
@@ -48,16 +45,24 @@ pub trait Pool {
 
 	/// note to implementors: The default implementation
 	/// of this function is usually enough; however this can be overridden
-	/// if you can provide an optimisation.
+	/// for optimisation reasons.
 	fn raw_empty(&self) -> Self::Raw {
 		self.raw_from_str("")
 	}
 
-	/// note to implementors: You probably don't want this (you'll know if you do).
-	/// This can be overridden if you can provide an optimisation.
+	/// note to implementors: You probably don't want this (you'll know if you do);
+	/// however this can be overridden for optimisation reasons.
 	fn raw_empty_with_capacity(&self, capacity: usize) -> Self::Raw {
 		let _ = capacity;
 		self.raw_empty()
+	}
+
+	// --- provided functions ---
+
+	/// note to implementors: The default implementation
+	/// of this function is usually enough
+	fn raw_from_str(&self, s: &str) -> Self::Raw {
+		unsafe { self.raw_from_slice(s.as_bytes()) }
 	}
 }
 
