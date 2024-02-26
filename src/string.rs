@@ -304,9 +304,6 @@ impl<P: Pool> String<P> {
 	}
 }
 
-impl<P: Pool> String<P> {
-}
-
 impl From<&str> for String {
 	fn from(s: &str) -> Self {
 		Self::from((s, GlobalPool))
