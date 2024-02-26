@@ -277,31 +277,8 @@ impl<P: Pool> String<P> {
 		self.raw = self.pool.raw_empty();
 	}
 
-	pub fn drain<R>(&mut self, range: R) -> Drain<'_, P>
-	where
-		R: RangeBounds<usize>
-	{
-		// basically manual impl of std::slice::range
-		let start = match range.start_bound() {
-			Bound::Included(b) => { *b }
-			Bound::Excluded(b) => { b + 1 }
-			Bound::Unbounded => { 0 }
-		};
-		let end = match range.end_bound() {
-			Bound::Included(b) => { *b + 1 }
-			Bound::Excluded(b) => { *b }
-			Bound::Unbounded => { self.len() }
-		};
-		assert!(start <= end && end <= self.len());
-
-		assert!(self.is_char_boundary(start));
-		assert!(self.is_char_boundary(end));
-
-		let string = self as *mut _;
-		let chars = self[start..end].chars();
-
-		Drain { string, start, end, chars }
-	}
+	// skipping (for now): drain
+	// skipping (for now): replace_range
 }
 
 impl From<&str> for String {
@@ -321,53 +298,5 @@ impl<P: Pool> Deref for String<P> {
 	type Target = str;
 	fn deref(&self) -> &str {
 		self.as_str()
-	}
-}
-
-pub struct Drain<'h, P: Pool> {
-	string: *mut String<P>,
-	start: usize,
-	end: usize,
-	chars: std_str::Chars<'h>
-}
-
-impl<P: Pool> Drop for Drain<'_, P> {
-	fn drop(&mut self) {
-		let string = unsafe { &mut *self.string };
-
-		let slice = string.as_bytes();
-		let start = &slice[..self.start];
-		let end = &slice[self.end..];
-
-		let new_raw = unsafe {
-			string.pool.raw_from_slices(SlicesWrap(&[
-				&slice[..self.start],
-				&slice[self.end..]
-			]))
-		};
-
-		string.raw = new_raw;
-	}
-}
-
-impl<P: Pool> Iterator for Drain<'_, P> {
-	type Item = char;
-
-	fn next(&mut self) -> Option<char> {
-		self.chars.next()
-	}
-
-	fn size_hint(&self) -> (usize, Option<usize>) {
-		self.chars.size_hint()
-	}
-
-	fn last(mut self) -> Option<char> {
-		self.chars.next_back()
-	}
-}
-
-impl<P: Pool> DoubleEndedIterator for Drain<'_, P> {
-	fn next_back(&mut self) -> Option<char> {
-		self.chars.next_back()
 	}
 }
