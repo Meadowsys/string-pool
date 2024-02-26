@@ -119,6 +119,11 @@ impl<P: Pool> String<P> {
 	pub fn into_bytes(self) -> Vec<u8> {
 		self.pool.raw_into_vec(self.raw)
 	}
+
+	pub fn as_str(&self) -> &str {
+		let slice = self.pool.raw_to_slice(&self.raw);
+		unsafe { std_str::from_utf8_unchecked(slice) }
+	}
 }
 
 impl From<&str> for String {

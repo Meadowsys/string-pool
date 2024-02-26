@@ -5,3 +5,7 @@ Global immutable string pool, like Java. Made for fun/educational/experimentatio
 Should be okay to use, but at the moment, it is not highly tested. Use at your own risk! Do feel free to file issues for whatever reason too, and I'll get back to them as soon as I can.
 
 Docs for the current published version of the crate can be found [on docs.rs](https://docs.rs/string-pool).
+
+## Known issues
+
+- Cannot implement `as_mut_str`
