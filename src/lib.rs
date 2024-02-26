@@ -1,12 +1,11 @@
-// TODO: remove when more complete
-#![allow(unused)]
-#![allow(
-	clippy::missing_safety_doc,
-	clippy::new_without_default
-)]
+// TODO: remove when more finished
+#![allow(dead_code, unused_imports, unused_variables)]
+#![allow(clippy::missing_safety_doc)]
+
+#![allow(clippy::new_without_default)]
 
 pub mod pool;
-pub mod string;
+mod string;
 
-pub use string::String;
-// pub use pool::{ gc, stats, Stats };
+pub use self::string::String;
+pub use self::pool::Pool;
