@@ -5,7 +5,7 @@ mod global;
 
 pub use global::GlobalPool;
 
-pub trait Pool {
+pub trait Pool: Clone {
 	type Raw;
 
 	// --- required functions ---

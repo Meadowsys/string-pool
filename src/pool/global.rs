@@ -6,6 +6,7 @@ use ::std::hash::{ Hash, Hasher };
 use ::std::sync::Arc;
 
 /// The default, global string pool
+#[derive(Clone)]
 pub struct GlobalPool;
 
 /// The actual backing store for the default global pool
