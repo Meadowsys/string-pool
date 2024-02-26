@@ -7,7 +7,7 @@
 #![allow(clippy::new_without_default)]
 
 pub mod pool;
-mod string;
+pub mod string;
 
 pub use crate::string::String;
 pub use crate::pool::Pool;

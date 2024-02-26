@@ -1,5 +1,5 @@
 use crate::pool::{ GlobalPool, Pool, SlicesWrap };
-use ::std::ops::Deref;
+use ::std::ops::{ Bound, Deref, RangeBounds };
 use ::std::string::{ self as std_string, String as StdString };
 use ::std::str as std_str;
 
@@ -272,6 +272,36 @@ impl<P: Pool> String<P> {
 		self.raw = self_raw;
 		String { raw: other_raw, pool }
 	}
+
+	pub fn clear(&mut self) {
+		self.raw = self.pool.raw_empty();
+	}
+
+	pub fn drain<R>(&mut self, range: R) -> Drain<'_, P>
+	where
+		R: RangeBounds<usize>
+	{
+		// basically manual impl of std::slice::range
+		let start = match range.start_bound() {
+			Bound::Included(b) => { *b }
+			Bound::Excluded(b) => { b + 1 }
+			Bound::Unbounded => { 0 }
+		};
+		let end = match range.end_bound() {
+			Bound::Included(b) => { *b + 1 }
+			Bound::Excluded(b) => { *b }
+			Bound::Unbounded => { self.len() }
+		};
+		assert!(start <= end && end <= self.len());
+
+		assert!(self.is_char_boundary(start));
+		assert!(self.is_char_boundary(end));
+
+		let string = self as *mut _;
+		let chars = self[start..end].chars();
+
+		Drain { string, start, end, chars }
+	}
 }
 
 impl<P: Pool> String<P> {
@@ -295,4 +325,11 @@ impl<P: Pool> Deref for String<P> {
 	fn deref(&self) -> &str {
 		self.as_str()
 	}
+}
+
+pub struct Drain<'h, P: Pool> {
+	string: *mut String<P>,
+	start: usize,
+	end: usize,
+	chars: std_str::Chars<'h>
 }
