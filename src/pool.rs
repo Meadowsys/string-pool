@@ -71,6 +71,7 @@ pub trait Pool: Clone {
 /// that's just done by repeatedly calling `hash` on every u8 in sequence, to
 /// purposefully ensure that by doing the same to just one slice, or any amount of slices,
 /// there will be the same resulting hash as if you were to join the slices.
+#[derive(Debug)]
 #[repr(transparent)]
 pub struct SlicesWrap<'h>(pub &'h [&'h [u8]]);
 

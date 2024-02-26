@@ -46,6 +46,7 @@ impl Pool for GlobalPool {
 
 /// Wrapper for `Box<[u8]>` that hashes the slice within by repeatedly
 /// calling `Hasher::write_u8`, matching [`Hash`] impl of [`SlicesWrap`]
+#[derive(Debug)]
 #[repr(transparent)]
 pub struct SliceHashWrap(Box<[u8]>);
 
@@ -87,6 +88,61 @@ impl<'h> Equivalent<<GlobalPool as Pool>::Raw> for SlicesWrap<'h> {
 				(None, None) => { return true }
 				(Some(a), Some(b)) => { continue }
 			}
+		}
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use ::rand::{ Rng, rngs::OsRng };
+	use ::std::string::String as StdString;
+	use ::std::iter::repeat;
+	use ::std::hash::BuildHasher;
+
+	fn rand_string() -> StdString {
+		let mut vec = vec![' '; OsRng.gen_range(0..100)];
+		OsRng.fill(&mut *vec);
+		vec.into_iter().collect()
+	}
+
+	#[test]
+	fn slices_wrap_iter() {
+		let hash_builder = hashbrown::hash_map::DefaultHashBuilder::default();
+
+		for _ in 0..100 {
+			// generate vec of random length 0-10, with strings 0-100 chars
+			let strs = repeat(0u8)
+				.take(OsRng.gen_range(0..10))
+				.map(|_| rand_string())
+				.collect::<Vec<_>>();
+
+			// create instance of SliceHashWrap (joining strings)
+			let pool_strs = strs.iter()
+				.map(|s| &**s)
+				.collect::<String>();
+			let pool_strs = Arc::new(SliceHashWrap(pool_strs.into_bytes().into_boxed_slice()));
+
+			// create instance of SlicesWrap
+			let slices = strs.iter()
+				.map(|s| s.as_bytes())
+				.collect::<Vec<_>>();
+			let slices = SlicesWrap(&slices);
+
+			// hash SliceHashWrap
+			let mut hasher_pool = hash_builder.build_hasher();
+			pool_strs.hash(&mut hasher_pool);
+			let hash_pool = hasher_pool.finish();
+
+			// hash SlicesWrap
+			let mut hasher_slices = hash_builder.build_hasher();
+			slices.hash(&mut hasher_slices);
+			let hash_slices = hasher_slices.finish();
+
+			// test hash eq
+			assert_eq!(hash_pool, hash_slices, "hashes should be equal");
+			// test actual eq
+			assert!(slices.equivalent(&pool_strs), "pool and slices should be equal");
 		}
 	}
 }
