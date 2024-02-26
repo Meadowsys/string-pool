@@ -9,3 +9,4 @@ Docs for the current published version of the crate can be found [on docs.rs](ht
 ## Known issues
 
 - Cannot implement `as_mut_str`
+- Doesn't make sense to implement `with_capacity`, `capacity` (no meaningful value to give, and makes no sense in the context of string pool)

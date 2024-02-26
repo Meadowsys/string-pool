@@ -13,10 +13,6 @@ impl String {
 		Self::new_in(GlobalPool)
 	}
 
-	pub fn with_capacity(capacity: usize) -> Self {
-		Self::with_capacity_in(capacity, GlobalPool)
-	}
-
 	pub fn from_utf8(vec: Vec<u8>) -> Result<Self, std_string::FromUtf8Error> {
 		Self::from_utf8_in(vec, GlobalPool)
 	}
@@ -60,11 +56,6 @@ impl String {
 impl<P: Pool> String<P> {
 	pub fn new_in(pool: P) -> Self {
 		let raw = pool.raw_empty();
-		Self { raw, pool }
-	}
-
-	pub fn with_capacity_in(capacity: usize, pool: P) -> Self {
-		let raw = pool.raw_empty_with_capacity(capacity);
 		Self { raw, pool }
 	}
 

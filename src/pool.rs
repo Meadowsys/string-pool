@@ -52,13 +52,6 @@ pub trait Pool {
 		unsafe { self.raw_from_slice(&[]) }
 	}
 
-	/// note to implementors: You probably don't want this (you'll know if you do);
-	/// however this can be overridden for optimisation reasons.
-	fn raw_empty_with_capacity(&self, capacity: usize) -> Self::Raw {
-		let _ = capacity;
-		self.raw_empty()
-	}
-
 	/// note to implementors: The default implementation
 	/// of this function is usually enough; however this can be overridden
 	/// for optimisation reasons.
