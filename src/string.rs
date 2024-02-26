@@ -109,8 +109,7 @@ impl<P: Pool> String<P> {
 	}
 
 	pub fn as_str(&self) -> &str {
-		let slice = self.pool.raw_to_slice(&self.raw);
-		unsafe { std_str::from_utf8_unchecked(slice) }
+		unsafe { std_str::from_utf8_unchecked(self.as_bytes()) }
 	}
 
 	// skipping: as_mut_str
@@ -118,7 +117,7 @@ impl<P: Pool> String<P> {
 	pub fn push_str(&mut self, string: &str) {
 		let new_raw = unsafe {
 			self.pool.raw_from_slices(SlicesWrap(&[
-				self.pool.raw_to_slice(&self.raw),
+				self.as_bytes(),
 				string.as_bytes()
 			]))
 		};
@@ -147,7 +146,7 @@ impl<P: Pool> String<P> {
 		if new_len > self.len() { return }
 
 		assert!(self.is_char_boundary(new_len));
-		let new_slice = &self.pool.raw_to_slice(&self.raw)[..new_len];
+		let new_slice = &self.as_bytes()[..new_len];
 		let new_raw = unsafe { self.pool.raw_from_slice(new_slice) };
 
 		self.raw = new_raw;
@@ -157,7 +156,7 @@ impl<P: Pool> String<P> {
 		let ch = self.chars().next_back()?;
 		let new_len = self.len() - ch.len_utf8();
 
-		let new_slice = &self.pool.raw_to_slice(&self.raw)[..new_len];
+		let new_slice = &self.as_bytes()[..new_len];
 		let new_raw = unsafe { self.pool.raw_from_slice(new_slice) };
 
 		self.raw = new_raw;
@@ -170,7 +169,7 @@ impl<P: Pool> String<P> {
 			.expect("cannot remove a char from the end of a string");
 		let next = i + ch.len_utf8();
 
-		let slice = self.pool.raw_to_slice(&self.raw);
+		let slice = self.as_bytes();
 		let new_raw = unsafe {
 			self.pool.raw_from_slices(SlicesWrap(&[
 				&slice[..i],
