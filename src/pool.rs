@@ -37,6 +37,17 @@ pub trait Pool {
 
 	/// note to implementors: The default implementation
 	/// of this function is usually enough; however this can be overridden
+	/// for efficiency reasons.
+	///
+	/// # Safety
+	///
+	/// The provided vec must be valid UTF-8.
+	unsafe fn raw_from_vec(&self, vec: Vec<u8>) -> Self::Raw {
+		self.raw_from_slice(&vec)
+	}
+
+	/// note to implementors: The default implementation
+	/// of this function is usually enough; however this can be overridden
 	/// if you can provide an optimisation.
 	fn raw_empty(&self) -> Self::Raw {
 		self.raw_from_str("")

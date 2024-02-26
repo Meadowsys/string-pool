@@ -75,7 +75,7 @@ impl<P: Pool> String<P> {
 		// any other way to get it than through this
 		let std_string = StdString::from_utf8(vec)?;
 		let vec = std_string.into_bytes();
-		let raw = unsafe { pool.raw_from_slice(&vec) };
+		let raw = unsafe { pool.raw_from_vec(vec) };
 		Ok(Self { raw, pool })
 	}
 
@@ -104,7 +104,8 @@ impl<P: Pool> String<P> {
 	}
 
 	pub unsafe fn from_utf8_unchecked_in(bytes: Vec<u8>, pool: P) -> Self {
-		Self::from_utf8_unchecked_slice_in(&bytes, pool)
+		let raw = pool.raw_from_vec(bytes);
+		Self { raw, pool }
 	}
 
 	pub unsafe fn from_utf8_unchecked_slice_in(slice: &[u8], pool: P) -> Self {
