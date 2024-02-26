@@ -10,10 +10,10 @@ pub trait Pool {
 
 	/// # Safety
 	///
-	/// The provided slices, when joined together using
-	/// [`SlicesWrap::to_boxed_slice`], must be valid UTF-8. Strictly speaking
-	/// individual slices don't have to be valid UTF-8, so this should _not_ be
-	/// relied on,but it is very likely that they will be.
+	/// The provided slices, when joined together using [`SlicesWrap::to_boxed_slice`],
+	/// must be valid UTF-8. Strictly speaking individual slices don't have to be
+	/// valid UTF-8, as long as the whole is, so this should _not_ be relied on,
+	/// even though it is quite likely that they will be.
 	unsafe fn raw_from_slices(&self, slices: SlicesWrap) -> Self::Raw;
 
 	// --- provided functions ---
@@ -21,6 +21,10 @@ pub trait Pool {
 	/// note to implementors: The default implementation
 	/// of this function is usually enough; however this can be overridden
 	/// for efficiency reasons.
+	///
+	/// # Safety
+	///
+	/// The provided slice must be valid UTF-8.
 	unsafe fn raw_from_slice(&self, slice: &[u8]) -> Self::Raw {
 		self.raw_from_slices(SlicesWrap(&[slice]))
 	}

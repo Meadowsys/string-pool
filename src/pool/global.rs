@@ -5,8 +5,10 @@ use ::parking_lot::RwLock;
 use ::std::hash::{ Hash, Hasher };
 use ::std::sync::Arc;
 
+/// The default, global string pool
 pub struct GlobalPool;
 
+/// The actual backing store for the default global pool
 static POOL: LazyWrap<RwLock<HashSet<<GlobalPool as Pool>::Raw>>> = LazyWrap::new(|| {
 	let set = HashSet::new();
 	RwLock::new(set)
