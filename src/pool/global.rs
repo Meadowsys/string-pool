@@ -95,6 +95,7 @@ impl<'h> Equivalent<<GlobalPool as Pool>::Raw> for SlicesWrap<'h> {
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use ::hashbrown::hash_map::DefaultHashBuilder;
 	use ::rand::{ Rng, rngs::OsRng };
 	use ::std::string::String as StdString;
 	use ::std::iter::repeat;
@@ -109,6 +110,12 @@ mod tests {
 	#[test]
 	fn slices_wrap_iter_hash_and_eq() {
 		let hash_builder = hashbrown::hash_map::DefaultHashBuilder::default();
+
+		let hash_item = |item: &dyn Hash| {
+			let mut hasher = hash_builder.build_hasher();
+			item.hash(&mut hasher);
+			hasher.finish()
+		};
 
 		for _ in 0..100 {
 			// generate vec of random length 0-10, with strings 0-100 chars
@@ -129,15 +136,8 @@ mod tests {
 				.collect::<Vec<_>>();
 			let slices = SlicesWrap(&_slices);
 
-			// hash SliceHashWrap
-			let mut hasher_pool = hash_builder.build_hasher();
-			pool_strs.hash(&mut hasher_pool);
-			let hash_pool = hasher_pool.finish();
-
-			// hash SlicesWrap
-			let mut hasher_slices = hash_builder.build_hasher();
-			slices.hash(&mut hasher_slices);
-			let hash_slices = hasher_slices.finish();
+			let hash_pool = hash_item(&pool_strs);
+			let hash_slices = hash_item(&slices);
 
 			// test hash eq
 			assert_eq!(hash_pool, hash_slices, "hashes should be equal");
@@ -149,10 +149,7 @@ mod tests {
 			*last = &last[..last.len() - last_str.chars().last().unwrap().len_utf8()];
 
 			let slices = SlicesWrap(&_slices);
-
-			let mut hasher_slices = hash_builder.build_hasher();
-			slices.hash(&mut hasher_slices);
-			let hash_slices = hasher_slices.finish();
+			let hash_slices = hash_item(&slices);
 
 			assert_ne!(hash_pool, hash_slices, "hashes should not be eq");
 			assert!(!slices.equivalent(&pool_strs), "pool and slices should not be equal");
