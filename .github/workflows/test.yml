@@ -34,7 +34,6 @@ jobs:
         tar xvf grcov.bz2
         rm grcov.bz2
 
-        mkdir target/coverage
         grcov . -s . -t lcov --binary-path target/release/ --branch --ignore-not-existing -o target/coverage/tests.lcov
 
     - name: upload to codecov
