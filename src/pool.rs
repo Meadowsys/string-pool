@@ -84,11 +84,13 @@ pub trait Pool: Clone {
 pub struct SlicesWrap<'h>(pub &'h [&'h [u8]]);
 
 impl<'h> SlicesWrap<'h> {
+	pub fn to_vec(&self) -> Vec<u8> {
+		self.into_iter().collect()
+	}
+
 	/// Joins the slices in sequence, returning a boxed slice.
 	pub fn to_boxed_slice(&self) -> Box<[u8]> {
-		self.into_iter()
-			.collect::<Vec<_>>()
-			.into_boxed_slice()
+		self.to_vec().into_boxed_slice()
 	}
 }
 
