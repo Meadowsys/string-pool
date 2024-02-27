@@ -6,47 +6,9 @@ on:
     - "v*.*.*"
 
 jobs:
-  test:
-    name: run tests
-    runs-on: ubuntu-22.04
-
-    env:
-      RUSTFLAGS: "-Cinstrument-coverage -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code"
-
-    steps:
-    - name: checkout code
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
-    - name: setup rust
-      run: rustc --version
-
-    - name: build
-      run: cargo build --verbose
-
-    - name: test
-      run: cargo test --release --verbose
-      env:
-        LLVM_PROFILE_FILE: "target/coverage/test-file.profraw"
-        CARGO_INCREMENTAL: "0"
-
-    - name: fetch/run grcov
-      run: |
-        curl -Lo grcov.bz2 https://github.com/mozilla/grcov/releases/download/v0.8.19/grcov-x86_64-unknown-linux-musl.tar.bz2
-        tar xvf grcov.bz2
-        rm grcov.bz2
-
-        ./grcov . -s . -t lcov --binary-path ./target/release/ --branch --ignore-not-existing --ignore "./src/tests/*" -o ./target/coverage/tests.lcov
-
-    - name: upload to codecov
-      uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab # v4.1.0
-      with:
-        files: target/coverage/*.lcov
-        token: ${{ secrets.CODECOV_TOKEN }}
-
   publish:
     name: publish crate
     runs-on: ubuntu-22.04
-    needs: test
 
     steps:
     - name: checkout code
@@ -55,10 +17,10 @@ jobs:
     - name: setup rust
       run: rustc --version
 
-    - name: build
-      run: cargo build --verbose
-    - name: build release
-      run: cargo build --release --verbose
+    - run: cargo build --verbose
+    - run: cargo build --release --verbose
+    - run: cargo test --verbose
+    - run: cargo test --release --verbose
 
     - name: dry run publish
       run: cargo publish --dry-run
