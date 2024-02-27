@@ -1,22 +1,7 @@
 use crate::Pool;
 use super::*;
+use ::rand::{ Rng, rngs::OsRng };
 use ::std::fmt::Debug;
-
-#[derive(Clone)]
-struct TestPool;
-
-impl Pool for TestPool {
-	type Raw = StdString;
-
-	unsafe fn raw_from_slices(&self, slices: SlicesWrap) -> Self::Raw {
-		let vec = slices.to_boxed_slice().into_vec();
-		unsafe { StdString::from_utf8_unchecked(vec) }
-	}
-
-	fn raw_to_slice<'r>(&self, raw: &'r Self::Raw) -> &'r [u8] {
-		raw.as_bytes()
-	}
-}
 
 #[test]
 fn new() {
@@ -66,5 +51,42 @@ fn from_utf8_and_slice() {
 
 	// stolen from std String's from_utf8 doc
 	assert_err(vec![0u8, 159, 146, 150]);
+}
 
+#[test]
+fn push() {
+	let mut string_std = StdString::new();
+	let mut string = String::new();
+	let mut string_custom_pool = String::new_in(TestPool);
+
+	for _ in 0..20 {
+		let s = rand_std_string();
+		string_std.push_str(&s);
+		string.push_str(&s);
+		string_custom_pool.push_str(&s);
+		assert_eq!(&*string_std, &*string);
+		assert_eq!(&*string_std, &*string_custom_pool);
+	}
+}
+
+#[derive(Clone)]
+struct TestPool;
+
+impl Pool for TestPool {
+	type Raw = StdString;
+
+	unsafe fn raw_from_slices(&self, slices: SlicesWrap) -> Self::Raw {
+		let vec = slices.to_boxed_slice().into_vec();
+		unsafe { StdString::from_utf8_unchecked(vec) }
+	}
+
+	fn raw_to_slice<'r>(&self, raw: &'r Self::Raw) -> &'r [u8] {
+		raw.as_bytes()
+	}
+}
+
+fn rand_std_string() -> StdString {
+	let mut vec = vec![' '; OsRng.gen_range(50..100)];
+	OsRng.fill(&mut *vec);
+	vec.into_iter().collect()
 }

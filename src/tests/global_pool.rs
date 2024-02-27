@@ -9,11 +9,11 @@ use ::std::hash::BuildHasher;
 fn slices_wrap_iter_hash_and_eq() {
 	let hash_builder = hashbrown::hash_map::DefaultHashBuilder::default();
 
-	for _ in 0..100 {
+	for _ in 0..1000 {
 		// generate vec of random length 0-10, with strings 0-100 chars
 		let strs = repeat(0u8)
-			.take(OsRng.gen_range(1..10))
-			.map(|_| rand_string())
+			.take(OsRng.gen_range(1..20))
+			.map(|_| rand_std_string())
 			.collect::<Vec<_>>();
 
 		// create instance of SliceHashWrap (joining strings)
@@ -36,6 +36,9 @@ fn slices_wrap_iter_hash_and_eq() {
 		// test actual eq
 		assert!(slices.equivalent(&pool_strs), "pool and slices should be equal");
 
+		// this one is guaranteed by rand_std_string generating 1..100 chars
+		// panics when that is changed to 0..100
+		// TODO: refactor to make it be able to generate 0..100 without issue
 		let last = _slices.last_mut().unwrap();
 		let last_str = unsafe { std::str::from_utf8_unchecked(last) };
 		*last = &last[..last.len() - last_str.chars().last().unwrap().len_utf8()];
@@ -48,7 +51,7 @@ fn slices_wrap_iter_hash_and_eq() {
 	}
 }
 
-fn rand_string() -> StdString {
+fn rand_std_string() -> StdString {
 	let mut vec = vec![' '; OsRng.gen_range(1..100)];
 	OsRng.fill(&mut *vec);
 	vec.into_iter().collect()
