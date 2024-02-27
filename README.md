@@ -8,7 +8,15 @@ Docs for the current published version of the crate can be found [on docs.rs](ht
 
 ## Known issues
 
-- Cannot implement `as_mut_str`, `as_mut_vec`
-- Doesn't make sense to implement capacity related methods (makes no sense in the context of string pool)
-  - `with_capacity`, `capacity`, `reserve`, `reserve_exact`, `try_reserve`, `try_reserve_exact`, `shrink_to_fit`, `shrink_to`
-- Cannot implement `from_raw_parts`, `into_raw_parts`
+### The nature of a string pool
+
+Cannot implement the following, due to it not making sense in the context of string pool:
+
+- Borrowing as foreign mutable type (as we have no control what happens internally): `as_mut_str`, `as_mut_vec`, `AsMut`, `BorrowMut`
+- Capacity related methods: `with_capacity`, `capacity`, `reserve`, `reserve_exact`, `try_reserve`, `try_reserve_exact`, `shrink_to_fit`, `shrink_to`
+- Raw pointer related: `from_raw_parts`, `into_raw_parts`
+
+### Trait limitations
+
+- `Debug` impl requires the pool and raw value to also implement `Debug`
+- `Default` impl requires the pool to also implement `Default`

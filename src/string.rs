@@ -1,5 +1,9 @@
 use crate::pool::{ GlobalPool, Pool, SlicesWrap };
+use ::std::borrow::Borrow;
+use ::std::ffi::OsStr;
+use ::std::fmt::{ self, Debug, Display };
 use ::std::ops::{ Add, AddAssign, Bound, Deref, RangeBounds };
+use ::std::path::Path;
 use ::std::string::{ self as std_string, String as StdString };
 use ::std::str as std_str;
 
@@ -376,6 +380,36 @@ impl<P: Pool, P2: Pool> AddAssign<&String<P2>> for String<P> {
 	}
 }
 
+impl<P: Pool> AsRef<[u8]> for String<P> {
+	fn as_ref(&self) -> &[u8] {
+		self.as_bytes()
+	}
+}
+
+impl<P: Pool> AsRef<OsStr> for String<P> {
+	fn as_ref(&self) -> &OsStr {
+		self.as_str().as_ref()
+	}
+}
+
+impl<P: Pool> AsRef<Path> for String<P> {
+	fn as_ref(&self) -> &Path {
+		self.as_str().as_ref()
+	}
+}
+
+impl<P: Pool> AsRef<str> for String<P> {
+	fn as_ref(&self) -> &str {
+		self
+	}
+}
+
+impl<P: Pool> Borrow<str> for String<P> {
+	fn borrow(&self) -> &str {
+		self
+	}
+}
+
 impl<P: Pool> Clone for String<P> {
 	fn clone(&self) -> Self {
 		let raw = self.pool.raw_clone(&self.raw);
@@ -384,10 +418,37 @@ impl<P: Pool> Clone for String<P> {
 	}
 }
 
+impl<P: Pool + Debug> Debug for String<P>
+where
+	P::Raw: Debug
+{
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.debug_struct("String")
+			.field("pool", &self.pool)
+			.field("raw", &self.raw)
+			.field("string", &self.as_str())
+			.finish()
+	}
+}
+
+impl<P: Pool + Default> Default for String<P> {
+	fn default() -> Self {
+		let pool = P::default();
+		let raw = pool.raw_empty();
+		Self { raw, pool }
+	}
+}
+
 impl<P: Pool> Deref for String<P> {
 	type Target = str;
 	fn deref(&self) -> &str {
 		self.as_str()
+	}
+}
+
+impl<P: Pool> Display for String<P> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		Display::fmt(&**self, f)
 	}
 }
 
