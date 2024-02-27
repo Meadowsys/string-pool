@@ -9,7 +9,7 @@ pub struct String<P: Pool = GlobalPool> {
 }
 
 #[cfg(test)]
-#[path = "./string_tests.rs"]
+#[path = "./tests/string.rs"]
 mod tests;
 
 // constructors with default pool
