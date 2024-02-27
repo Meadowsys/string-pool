@@ -101,19 +101,19 @@ mod tests {
 	use ::std::hash::BuildHasher;
 
 	fn rand_string() -> StdString {
-		let mut vec = vec![' '; OsRng.gen_range(0..100)];
+		let mut vec = vec![' '; OsRng.gen_range(1..100)];
 		OsRng.fill(&mut *vec);
 		vec.into_iter().collect()
 	}
 
 	#[test]
-	fn slices_wrap_iter() {
+	fn slices_wrap_iter_hash_and_eq() {
 		let hash_builder = hashbrown::hash_map::DefaultHashBuilder::default();
 
 		for _ in 0..100 {
 			// generate vec of random length 0-10, with strings 0-100 chars
 			let strs = repeat(0u8)
-				.take(OsRng.gen_range(0..10))
+				.take(OsRng.gen_range(1..10))
 				.map(|_| rand_string())
 				.collect::<Vec<_>>();
 
@@ -124,10 +124,10 @@ mod tests {
 			let pool_strs = Arc::new(SliceHashWrap(pool_strs.into_bytes().into_boxed_slice()));
 
 			// create instance of SlicesWrap
-			let slices = strs.iter()
+			let mut _slices = strs.iter()
 				.map(|s| s.as_bytes())
 				.collect::<Vec<_>>();
-			let slices = SlicesWrap(&slices);
+			let slices = SlicesWrap(&_slices);
 
 			// hash SliceHashWrap
 			let mut hasher_pool = hash_builder.build_hasher();
@@ -143,6 +143,19 @@ mod tests {
 			assert_eq!(hash_pool, hash_slices, "hashes should be equal");
 			// test actual eq
 			assert!(slices.equivalent(&pool_strs), "pool and slices should be equal");
+
+			let last = _slices.last_mut().unwrap();
+			let last_str = unsafe { std::str::from_utf8_unchecked(last) };
+			*last = &last[..last.len() - last_str.chars().last().unwrap().len_utf8()];
+
+			let slices = SlicesWrap(&_slices);
+
+			let mut hasher_slices = hash_builder.build_hasher();
+			slices.hash(&mut hasher_slices);
+			let hash_slices = hasher_slices.finish();
+
+			assert_ne!(hash_pool, hash_slices, "hashes should not be eq");
+			assert!(!slices.equivalent(&pool_strs), "pool and slices should not be equal");
 		}
 	}
 }
