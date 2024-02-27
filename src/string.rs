@@ -1,5 +1,5 @@
 use crate::pool::{ GlobalPool, Pool, SlicesWrap };
-use ::std::ops::{ Bound, Deref, RangeBounds };
+use ::std::ops::{ Add, AddAssign, Bound, Deref, RangeBounds };
 use ::std::string::{ self as std_string, String as StdString };
 use ::std::str as std_str;
 
@@ -7,6 +7,10 @@ pub struct String<P: Pool = GlobalPool> {
 	raw: P::Raw,
 	pool: P
 }
+
+#[cfg(test)]
+#[path = "./string_tests.rs"]
+mod tests;
 
 // constructors with default pool
 impl String {
@@ -292,6 +296,83 @@ impl<P: Pool> String<P> {
 	pub fn leak<'h>(self) -> &'h mut str {
 		let slice = self.pool.raw_into_vec(self.raw).leak();
 		unsafe { std_str::from_utf8_unchecked_mut(slice) }
+	}
+}
+
+impl<P: Pool> Add<&str> for String<P> {
+	type Output = Self;
+	fn add(mut self, rhs: &str) -> Self {
+		// delegates to AddAssign<&str> for String<P>
+		self += rhs;
+		self
+	}
+}
+
+impl<P: Pool> Add<&str> for &String<P> {
+	type Output = String<P>;
+	fn add(self, rhs: &str) -> String<P> {
+		let raw = unsafe {
+			self.pool.raw_from_slices(SlicesWrap(&[
+				self.as_bytes(),
+				rhs.as_bytes()
+			]))
+		};
+		let pool = self.pool.clone();
+
+		String { raw, pool }
+	}
+}
+
+impl<P: Pool, P2: Pool> Add<String<P2>> for String<P> {
+	type Output = Self;
+	fn add(self, rhs: String<P2>) -> Self {
+		// delegates to Add<&str> for String<P>
+		self + &*rhs
+	}
+}
+
+impl<P: Pool, P2: Pool> Add<String<P2>> for &String<P> {
+	type Output = String<P>;
+	fn add(self, rhs: String<P2>) -> String<P> {
+		// delegates to Add<&str> for &String<P>
+		self + &*rhs
+	}
+}
+
+impl<P: Pool, P2: Pool> Add<&String<P2>> for String<P> {
+	type Output = Self;
+	fn add(self, rhs: &String<P2>) -> Self {
+		// delegates to Add<&str> for String<P>
+		self + &**rhs
+	}
+}
+
+impl<P: Pool, P2: Pool> Add<&String<P2>> for &String<P> {
+	type Output = String<P>;
+	fn add(self, rhs: &String<P2>) -> String<P> {
+		// delegates to Add<&str> for &String<P>
+		self + &**rhs
+	}
+}
+
+
+impl<P: Pool> AddAssign<&str> for String<P> {
+	fn add_assign(&mut self, rhs: &str) {
+		self.push_str(rhs);
+	}
+}
+
+impl<P: Pool, P2: Pool> AddAssign<String<P2>> for String<P> {
+	fn add_assign(&mut self, rhs: String<P2>) {
+		// delegates to AddAssign<&str> for String<P>
+		*self += &*rhs
+	}
+}
+
+impl<P: Pool, P2: Pool> AddAssign<&String<P2>> for String<P> {
+	fn add_assign(&mut self, rhs: &String<P2>) {
+		// delegates to AddAssign<&str> for String<P>
+		*self += &**rhs
 	}
 }
 
