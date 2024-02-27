@@ -107,15 +107,15 @@ mod tests {
 		vec.into_iter().collect()
 	}
 
+	fn hash_item<T: Hash>(hash_builder: &DefaultHashBuilder, item: &T) -> u64 {
+		let mut hasher = hash_builder.build_hasher();
+		item.hash(&mut hasher);
+		hasher.finish()
+	}
+
 	#[test]
 	fn slices_wrap_iter_hash_and_eq() {
 		let hash_builder = hashbrown::hash_map::DefaultHashBuilder::default();
-
-		let hash_item = |item: &dyn Hash| {
-			let mut hasher = hash_builder.build_hasher();
-			item.hash(&mut hasher);
-			hasher.finish()
-		};
 
 		for _ in 0..100 {
 			// generate vec of random length 0-10, with strings 0-100 chars
@@ -136,8 +136,8 @@ mod tests {
 				.collect::<Vec<_>>();
 			let slices = SlicesWrap(&_slices);
 
-			let hash_pool = hash_item(&pool_strs);
-			let hash_slices = hash_item(&slices);
+			let hash_pool = hash_item(&hash_builder, &pool_strs);
+			let hash_slices = hash_item(&hash_builder, &slices);
 
 			// test hash eq
 			assert_eq!(hash_pool, hash_slices, "hashes should be equal");
@@ -149,7 +149,7 @@ mod tests {
 			*last = &last[..last.len() - last_str.chars().last().unwrap().len_utf8()];
 
 			let slices = SlicesWrap(&_slices);
-			let hash_slices = hash_item(&slices);
+			let hash_slices = hash_item(&hash_builder, &slices);
 
 			assert_ne!(hash_pool, hash_slices, "hashes should not be eq");
 			assert!(!slices.equivalent(&pool_strs), "pool and slices should not be equal");
