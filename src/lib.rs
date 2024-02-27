@@ -9,5 +9,7 @@
 pub mod pool;
 pub mod string;
 
+#[doc(inline)]
 pub use crate::string::String;
-pub use crate::pool::Pool;
+#[doc(inline)]
+pub use crate::pool::{ Pool, GlobalPool };
