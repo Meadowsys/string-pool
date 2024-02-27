@@ -1,6 +1,6 @@
 [package]
 name = "string-pool"
-version = "0.2.0"
+version = "0.2.1"
 description = "Global immutable string pool, like Java"
 edition = "2021"
 authors = ["Meadowsys"]
