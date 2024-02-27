@@ -79,22 +79,24 @@ impl<'h> Equivalent<<GlobalPool as Pool>::Raw> for SlicesWrap<'h> {
 		let mut iter2 = self.into_iter();
 
 		loop {
-			// possible outcomes:
-			// Some Some
-			//    - if a != b, false
-			//    - if a == b, not done yet, continue
-			// Some None
-			// None Some
-			//    - both of these are different lengths
-			//    - false
-			// None None
-			//    - if we haven't returned yet, both iters are same length and all equal
-			//    - true
 			match (iter1.next(), iter2.next()) {
-				(Some(a), Some(b)) if a != b => { return false }
+				// Some Some
+				//    - if a == b, good but not done yet, continue
+				(Some(a), Some(b)) if a == b => { continue }
+				//    - else (a != b), not good, return false
+				(Some(a), Some(b)) => { return false }
+
+				// Some None
+				// None Some
+				//    - iters are of different lengths
+				//    - return false
 				(Some(_), None) | (None, Some(_)) => { return false }
+
+				// None None
+				//    - if we haven't returned yet, all bytes in iter are equal
+				//    - both iters are also same length
+				//    - return true
 				(None, None) => { return true }
-				(Some(a), Some(b)) => { continue }
 			}
 		}
 	}
