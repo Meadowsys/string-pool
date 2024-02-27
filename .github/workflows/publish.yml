@@ -1,16 +1,17 @@
-name: tests
+name: publish
+
 on:
   push:
-    branches:
-    - "**"
-
-env:
-  RUSTFLAGS: "-Cinstrument-coverage -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code"
+    tags:
+    - "v*.*.*"
 
 jobs:
   test:
-    name: run
+    name: run tests
     runs-on: ubuntu-22.04
+
+    env:
+      RUSTFLAGS: "-Cinstrument-coverage -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code"
 
     steps:
     - name: checkout code
@@ -41,3 +42,33 @@ jobs:
       with:
         files: target/coverage/*.lcov
         token: ${{ secrets.CODECOV_TOKEN }}
+
+  publish:
+    name: publish crate
+    runs-on: ubuntu-22.04
+    needs: test
+
+    steps:
+    - name: checkout code
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+    - name: setup rust
+      run: rustc --version
+
+    - name: build
+      run: cargo build --verbose
+    - name: build release
+      run: cargo build --release --verbose
+
+    - name: dry run publish
+      run: cargo publish --dry-run
+
+    - name: upload artifact
+      uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+      with:
+        path: target/package/*.crate
+
+    - name: publish
+      run: cargo publish
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
