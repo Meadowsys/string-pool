@@ -112,6 +112,10 @@ impl<P: Pool> String<P> {
 		let raw = unsafe { pool.raw_from_vec(vec) };
 		String { raw, pool }
 	}
+
+	pub fn clone_to<P2: Pool>(&self, pool: P2) -> String<P2> {
+		self.to_other_pool(pool)
+	}
 }
 
 // functions that take self
@@ -291,6 +295,21 @@ impl<P: Pool> String<P> {
 	}
 }
 
+impl<P: Pool> Clone for String<P> {
+	fn clone(&self) -> Self {
+		let raw = self.pool.raw_clone(&self.raw);
+		let pool = self.pool.clone();
+		Self { raw, pool }
+	}
+}
+
+impl<P: Pool> Deref for String<P> {
+	type Target = str;
+	fn deref(&self) -> &str {
+		self.as_str()
+	}
+}
+
 impl From<&str> for String {
 	fn from(s: &str) -> Self {
 		Self::from((s, GlobalPool))
@@ -301,12 +320,5 @@ impl<P: Pool> From<(&str, P)> for String<P> {
 	fn from((s, pool): (&str, P)) -> Self {
 		let raw = unsafe { pool.raw_from_slice(s.as_bytes()) };
 		Self { raw, pool }
-	}
-}
-
-impl<P: Pool> Deref for String<P> {
-	type Target = str;
-	fn deref(&self) -> &str {
-		self.as_str()
 	}
 }
