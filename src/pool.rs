@@ -94,6 +94,16 @@ impl<'h> SlicesWrap<'h> {
 	pub fn to_boxed_slice(&self) -> Box<[u8]> {
 		self.to_vec().into_boxed_slice()
 	}
+
+	pub fn to_recursive_iter(&self) -> SlicesWrapIterRecursive<'h> {
+		let mut inner: Option<(&'h [u8], Option<Box<SlicesWrapIterRecursive<'h>>>)> = None;
+
+		for slice in self.0.iter().rev() {
+			inner = Some((*slice, Some(Box::new(SlicesWrapIterRecursive(inner)))))
+		}
+
+		SlicesWrapIterRecursive(inner)
+	}
 }
 
 impl<'h> Hash for SlicesWrap<'h> {
@@ -114,7 +124,8 @@ impl<'h> IntoIterator for &SlicesWrap<'h> {
 }
 
 /// Iterator for [`SlicesWrap`] that returns elements in one slice after the
-/// other in sequence. It would be the same as calling `.zip` with all the slices.
+/// other in sequence. The sequence returned is identical to if you were to zip
+/// all the slice iters to each other.
 /// Iterating through the boxed slice returned by [`SlicesWrap::to_boxed_slice`]
 /// would also yield the same sequence as if you were to iterate through this iterator.
 pub struct SlicesWrapIter<'h>(Vec<&'h [u8]>);
@@ -142,5 +153,27 @@ impl<'h> Iterator for SlicesWrapIter<'h> {
 	fn size_hint(&self) -> (usize, Option<usize>) {
 		let len = self.0.iter().map(|s| s.len()).sum();
 		(len, Some(len))
+	}
+}
+
+pub struct SlicesWrapIterRecursive<'h>(Option<(&'h [u8], Option<Box<SlicesWrapIterRecursive<'h>>>)>);
+
+impl<'h> Iterator for SlicesWrapIterRecursive<'h> {
+	type Item = u8;
+
+	fn next(&mut self) -> Option<u8> {
+		match self.0.take() {
+			Some((slice, next)) => {
+				if let [next_byte, rest @ ..] = slice {
+					let next_byte = *next_byte;
+					self.0 = Some((rest, next));
+					Some(next_byte)
+				} else {
+					self.0 = next.map(|i| *i).and_then(|SlicesWrapIterRecursive(items)| items);
+					self.next()
+				}
+			}
+			None => { None }
+		}
 	}
 }
