@@ -16,7 +16,7 @@ pub struct String<P: Pool = GlobalPool> {
 #[path = "./tests/string.rs"]
 mod tests;
 
-// constructors with default pool
+/// constructors in default pool
 impl String {
 	pub fn new() -> Self {
 		Self::new_in(GlobalPool)
@@ -58,10 +58,15 @@ impl String {
 	}
 }
 
-// constructors with custom pool
+/// constructors in custom pool
 impl<P: Pool> String<P> {
 	pub fn new_in(pool: P) -> Self {
 		let raw = pool.raw_empty();
+		Self { raw, pool }
+	}
+
+	pub fn from_str_in(s: &str, pool: P) -> Self {
+		let raw = unsafe { pool.raw_from_slice(s.as_bytes()) };
 		Self { raw, pool }
 	}
 
@@ -126,7 +131,7 @@ impl<P: Pool> String<P> {
 	}
 }
 
-// functions that take self
+/// methods that work with any pool
 impl<P: Pool> String<P> {
 	pub fn into_bytes(self) -> Vec<u8> {
 		self.pool.raw_into_vec(self.raw)
@@ -359,6 +364,37 @@ impl<P: Pool, P2: Pool> Add<&String<P2>> for &String<P> {
 	}
 }
 
+impl<P: Pool> Add<StdString> for String<P> {
+	type Output = Self;
+	fn add(self, rhs: StdString) -> Self {
+		// delegates to Add<&str> for String<P>
+		self + &*rhs
+	}
+}
+
+impl<P: Pool> Add<&StdString> for String<P> {
+	type Output = Self;
+	fn add(self, rhs: &StdString) -> Self {
+		// delegates to Add<&str> for String<P>
+		self + &**rhs
+	}
+}
+
+impl<P: Pool> Add<StdString> for &String<P> {
+	type Output = String<P>;
+	fn add(self, rhs: StdString) -> String<P> {
+		// delegates to Add<&str> for &String<P>
+		self + &*rhs
+	}
+}
+
+impl<P: Pool> Add<&StdString> for &String<P> {
+	type Output = String<P>;
+	fn add(self, rhs: &StdString) -> String<P> {
+		// delegates to Add<&str> for &String<P>
+		self + &**rhs
+	}
+}
 
 impl<P: Pool> AddAssign<&str> for String<P> {
 	fn add_assign(&mut self, rhs: &str) {
@@ -418,15 +454,16 @@ impl<P: Pool> Clone for String<P> {
 	}
 }
 
-impl<P: Pool + Debug> Debug for String<P>
+impl<P: Pool> Debug for String<P>
 where
+	P: Debug,
 	P::Raw: Debug
 {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.debug_struct("String")
+			.field("string", &self.as_str())
 			.field("pool", &self.pool)
 			.field("raw", &self.raw)
-			.field("string", &self.as_str())
 			.finish()
 	}
 }
@@ -452,15 +489,76 @@ impl<P: Pool> Display for String<P> {
 	}
 }
 
+// impl<'h, P: Pool> Extend<&'h char> for String<P> {}
+// impl<'h, P: Pool> Extend<&'h str> for String<P> {}
+// impl<P: Pool> Extend<Box<str>> for String<P> {}
+// impl<'h, P: Pool> Extend<Cow<'h, str>> for String<P> {}
+// impl<P: Pool, P2: Pool> Extend<String<P2>> for String<P> {}
+// impl<P: Pool> Extend<StdString> for String<P> {}
+// impl<P: Pool> Extend<char> for String<P> {}
+
 impl From<&str> for String {
 	fn from(s: &str) -> Self {
-		Self::from((s, GlobalPool))
+		Self::from_str_in(s, GlobalPool)
 	}
 }
 
 impl<P: Pool> From<(&str, P)> for String<P> {
 	fn from((s, pool): (&str, P)) -> Self {
-		let raw = unsafe { pool.raw_from_slice(s.as_bytes()) };
-		Self { raw, pool }
+		Self::from_str_in(s, pool)
 	}
 }
+
+// impl<'h, P: Pool> From<&'h String<P>> for Cow<'h, str> {}
+// impl<P: Pool, P2: Pool> From<&String<P2>> for String<P> {}
+// impl<P: Pool> From<&mut str> for String<P> {}
+// impl<P: Pool> From<&str> for String<P> {}
+// impl<P: Pool> From<Box<str>> for String<P> {}
+// impl<'h, P: Pool> From<Cow<'h, str>> for String<P> {}
+// impl<P: Pool> From<String<P>> for Arc<str> {}
+// impl<P: Pool> From<String<P>> for Box<dyn Error> {}
+// impl<P: Pool> From<String<P>> for Box<dyn Error + Send + Sync> {}
+// impl<P: Pool> From<String<P>> for Box<str> {}
+// impl<'h, P: Pool> From<String<P>> for Cow<'h, str> {}
+// impl<P: Pool> From<String<P>> for OsString {}
+// impl<P: Pool> From<String<P>> for PathBuf {}
+// impl<P: Pool> From<String<P>> for Rc<str> {}
+// impl<P: Pool> From<String<P>> for Vec<u8> {}
+// impl<P: Pool> From<char> for String<P> {}
+
+// impl<'h, P: Pool> FromIterator<&'h char> for String<P> {}
+// impl<'h, P: Pool> FromIterator<&'h str> for String<P> {}
+// impl<P: Pool> FromIterator<Box<str>> for String<P> {}
+// impl<'h, P: Pool> FromIterator<Cow<'h, str>> for String<P> {}
+// impl<'h, P: Pool> FromIterator<String<P>> for Cow<'h, str> {}
+// impl<'h, P: Pool, P2: Pool> FromIterator<String<P2>> for String<P> {}
+// impl<P: Pool> FromIterator<char> for String<P> {}
+
+// impl<P: Pool> FromStr for String<P> {}
+// impl<P: Pool> Hash for String<P> {}
+
+// impl<P: Pool> Index<Range<usize>> for String<P> {}
+// impl<P: Pool> Index<RangeFull> for String<P> {}
+// impl<P: Pool> Index<RangeInclusive<usize>> for String<P> {}
+// impl<P: Pool> Index<RangeTo<usize>> for String<P> {}
+// impl<P: Pool> Index<RangeToInclusive<usize>> for String<P> {}
+
+// impl Ord for String {}
+
+// impl<'h, P: Pool> PartialEq<&'h str> for String<P> {}
+// impl<'h, P: Pool> PartialEq<Cow<'h, str>> for String<P> {}
+// impl<'h, P: Pool> PartialEq<String<P>> for &'h str {}
+// impl<'h, P: Pool> PartialEq<String<P>> for Cow<'h, str> {}
+// impl<P: Pool> PartialEq<String<P>> for str {}
+// impl<P: Pool> PartialEq<str> for String<P> {}
+// impl<P: Pool> PartialEq for String<P> {}
+
+// impl<P: Pool> PartialOrd for String<P> {}
+
+// impl<'h, 'h2, P: Pool> Pattern<'h2> for &'h String<P> {}
+// impl<P: Pool> ToSocketAddrs for String<P> {}
+// impl<P: Pool> Write for String<P> {}
+
+// impl<P: Pool> Eq for String<P> {}
+// impl<P: Pool> StructuralEq for String<P> {}
+// impl<P: Pool> StructuralPartialEq for String<P> {}
