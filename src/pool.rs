@@ -162,12 +162,14 @@ impl<'h> Iterator for SlicesWrapIterRecursive<'h> {
 	type Item = u8;
 
 	fn next(&mut self) -> Option<u8> {
-		self.0.take().and_then(|(slice, next)| if let [next_byte, rest @ ..] = slice {
-			self.0 = Some((rest, next));
-			Some(*next_byte)
-		} else {
-			self.0 = next.map(|i| *i).and_then(|SlicesWrapIterRecursive(items)| items);
-			self.next()
+		self.0.take().and_then(|(slice, next)| {
+			if let [next_byte, rest @ ..] = slice {
+				self.0 = Some((rest, next));
+				Some(*next_byte)
+			} else {
+				self.0 = next.map(|i| *i).and_then(|SlicesWrapIterRecursive(items)| items);
+				self.next()
+			}
 		})
 	}
 }
