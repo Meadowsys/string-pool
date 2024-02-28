@@ -75,10 +75,12 @@ pub trait Pool: Clone {
 	}
 }
 
-/// Wraps a slice of slices of bytes. This has a simple hash implementation
-/// that's just done by repeatedly calling `hash` on every u8 in sequence, to
-/// purposefully ensure that by doing the same to just one slice, or any amount of slices,
-/// there will be the same resulting hash as if you were to join the slices.
+/// Wraps a slice of slices of bytes. This has a simple Hash and Eq implementation
+/// that just repeatedly hashes/checks every byte on every u8 in sequence, to ensure
+/// that no matter how many slices there are, as long as they have the same byte
+/// sequence, they will have the same resulting hash and compare equal. This way,
+/// we don't need to copy all the bytes into a new allocation until the absolute
+/// last step.
 #[derive(Debug)]
 #[repr(transparent)]
 pub struct SlicesWrap<'h>(pub &'h [&'h [u8]]);
